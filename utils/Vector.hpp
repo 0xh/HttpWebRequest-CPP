@@ -96,21 +96,21 @@ public:
         } else size++;
         int insertPos = 0;
 
-        type *newbackpack = new type[size];
+        type *newarray = new type[size];
         for (int i = 0; i < size; i++) {
             if (i == index) {
-                newbackpack[i] = item;
+                newarray[i] = item;
                 insertPos++;
                 continue;
             }
-            newbackpack[i] = items[i - insertPos];
+            newarray[i] = items[i - insertPos];
         }
         if (size - 1 > 0)
-            delete[] items;                    //destroy everything in here
-        items = new type[size];            //reset with new size
+            delete[] items;
+        items = new type[size];
         for (int i = 0; i < size; i++)
-            items[i] = newbackpack[i];
-        delete[] newbackpack;
+            items[i] = newarray[i];
+        delete[] newarray;
         return true;
     }
 
@@ -118,20 +118,20 @@ public:
     bool remove(int index) {
         if (0 <= index < size) {
             int skipped = 0;
-            type *newbackpack = new type[size - 1];
+            type *newArray = new type[size - 1];
             for (int i = 0; i < size; i++) {
                 if (i == index) {
                     skipped++;
                     continue;
                 }
-                newbackpack[i - skipped] = items[i];
+                newArray[i - skipped] = items[i];
             }
             if (size - 1 > 0)
                 delete[] items;
             items = new type[size - 1];
             for (int i = 0; i < size - 1; i++)
-                items[i] = newbackpack[i];
-            delete[] newbackpack;
+                items[i] = newArray[i];
+            delete[] newArray;
             size--;
             return true;
         } else {
@@ -154,12 +154,12 @@ public:
     void push_back(type &item) {
         size++;
         type *newbackpack = new type[size];
-        for (int i = 0; i < size - 1; i++)    //old backpack size
+        for (int i = 0; i < size - 1; i++)
             newbackpack[i] = items[i];
         newbackpack[size - 1] = item;
         if (size - 1 > 0)
-            delete[] items;                    //destroy everything in here
-        items = new type[size];            //reset with new size
+            delete[] items;
+        items = new type[size];
         for (int i = 0; i < size; i++)
             items[i] = newbackpack[i];
         delete[] newbackpack;

@@ -21,13 +21,16 @@ class HttpWebRequest {
     int sock, port;
     struct sockaddr_in sockaddress;
     char *ip, *get, *header, *rawResponse, *response;
-    bool log = false;
+    bool log = false, established = false;
 public:
 
     ~HttpWebRequest() {
         disconnect();
     }
 
+    /**
+     * Construct HttpWebRequest & Splits the ip and get for later use
+     */
     HttpWebRequest(char *ip, int port) {
         this->port = port;
         this->ip = new char[strlen(ip)], this->get = new char[strlen(ip)];
@@ -36,21 +39,46 @@ public:
         create();
     }
 
-
+    /**
+     * Add Headers to header map
+     */
     void add(const char *key, const char *value) {
         add((char *) key, (char *) value);
     }
 
+    /**
+     * Disconnect Socket and Clear Buffers
+     */
     void disconnect() {
         close(sock);
         port = 0;
         sock = 0;
+        memset(ip,0,strlen(ip));
+        memset(get,0, strlen(get));
+        memset(header,0, strlen(header));
+        delete[] ip;
+        delete[] get;
+        delete[] header;
+        ip = nullptr;
+        get = nullptr;
+        header = nullptr;
+        if(established) {
+            memset(rawResponse,0,strlen(rawResponse));
+            delete[] rawResponse;
+            rawResponse = nullptr;
+        }
     }
 
+    /**
+     * Header Map - Adds The Header to the HeaderMap to then be used.
+     */
     void add(char *key, char *value) {
         headers->addHeader(key, value);
     }
 
+    /**
+     * Generates the header. Establishes Socket Connection Then Sends The Header To The Destination
+     */
     bool establish() {
         generateHeader();
         if(log) std::cout << "Request Headers: \n" << header << std::endl << std::endl;
@@ -70,16 +98,25 @@ public:
         return response;
     }
 
+    /**
+     * Allow Logging
+     */
     void Log(bool log) {
         this->log = log;
     }
 
 private:
 
+    /**
+     * Cleans Header (Sloppy)
+     */
     void clean() {
         response = strstr(rawResponse, "\r\n\r\n");
     }
 
+    /**
+     * Reads Buffer and Auto Removes Header
+     */
     bool getStr() {
         rawResponse = new char[0];
         char buffer[4];
@@ -90,6 +127,9 @@ private:
         clean();
     }
 
+    /**
+     * Creates Socket
+     */
     bool create() {
         sockaddress.sin_family = AF_INET;
         sockaddress.sin_port = htons(port);
@@ -97,14 +137,23 @@ private:
         sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     }
 
+    /**
+     * Send Header to Socket
+     */
     bool sendMsg(char *bytes) {
         if (send(sock, bytes, strlen(bytes), 0) < 0) {
             return false;
         } else {
-            return getStr();
+            bool didSuceed = getStr();
+            if(didSuceed)
+                established = true;
+            return false;
         }
     }
 
+    /**
+     * Generates the Header by iterating through HeaderMap
+     */
     char *generateHeader() {
         const char *headerx = "GET %s HTTP/1.1\r\nHost: %s\r\n";
         char header_temp[512];
@@ -128,10 +177,16 @@ private:
         }
     }
 
+    /**
+     * Compare if equal to
+     */
     bool equals(char *t1, const char *t2) {
         return strncmp(t1, t2, strlen(t2)) == 0;
     }
 
+    /**
+     * Stop at Delim, Was having issue with garbage characters
+     */
     int stopAt(char* ok, char delim){
         for(int i = 0;i < strlen(ok); i++){
             if(*(ok+i) == delim) return i;
@@ -139,6 +194,9 @@ private:
         return (int) strlen(ok);
     }
 
+    /**
+     * Splits the IP and the GET Request Apart
+     */
     void grab(char *ip) {
         memset(this->ip, 0, strlen(ip));
         memset(this->get, 0, strlen(ip));
@@ -177,7 +235,6 @@ private:
             this->get[0] = '/';
         }
     }
-
 
 };
 
