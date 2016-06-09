@@ -56,16 +56,8 @@ public:
         memset(ip,0,strlen(ip));
         memset(get,0, strlen(get));
         memset(header,0, strlen(header));
-        delete[] ip;
-        delete[] get;
-        delete[] header;
-        ip = nullptr;
-        get = nullptr;
-        header = nullptr;
         if(established) {
             memset(rawResponse,0,strlen(rawResponse));
-            delete[] rawResponse;
-            rawResponse = nullptr;
         }
     }
 
@@ -147,7 +139,7 @@ private:
             bool didSuceed = getStr();
             if(didSuceed)
                 established = true;
-            return false;
+            return didSuceed;
         }
     }
 
